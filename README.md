@@ -1,5 +1,5 @@
 # aoc2023
-Advent of code 2021
+Advent of code 2023
 
 Striving for succinct solutions in Haskell.
 Since the problems are deterministic mappings they should require no state; all solutions will therefore be pure transformations.

@@ -1,5 +1,6 @@
 #!/usr/bin/env stack
 -- stack --resolver lts-18.18 script
+import Data.Either
 import Text.Parsec
 import Text.Parsec.Char
 
@@ -11,10 +12,10 @@ constraint _ (i,[]) = True
 constraint (r,g,b) (i,((r1,g1,b1):rs)) = and [r1 <= r, g1 <= g, b1 <= b, constraint (r,g,b) (i,rs)]
 
 parseline :: String -> (Int, [(Int,Int,Int)])
-parseline s = let (i, ps) = fromRight (error "parse fail") . parse numbers "" $ s
-    in (i, map combine ps)
+parseline s = let (i, ps) = fromRight (error "parse fail") . parse round "" $ s
+    in (i, map (foldl (\x f -> f x) (0,0,0)) ps)
     where
-        numbers = do
+        round = do
             _ <- string "Game "
             i <- read <$> many1 digit
             _ <- string ": "
@@ -24,17 +25,12 @@ parseline s = let (i, ps) = fromRight (error "parse fail") . parse numbers "" $ 
         red = do
             i <- read <$> many1 digit
             _ <- string " red"
-            return (i, 0, 0)
+            return $ \(r,g,b) -> (r+i, g, b)
         green = do
             i <- read <$> many1 digit
             _ <- string " green"
-            return (0, i, 0)
+            return $ \(r,g,b) -> (r, g+i, b)
         blue = do
             i <- read <$> many1 digit
             _ <- string " blue"
-            return (0, 0, i)
-
-combine :: [(Int,Int,Int)] -> (Int,Int,Int)
-combine [] = (0,0,0)
-combine ((r,g,b):rs) = let (r1, g1, b1) = combine rs
-                       in (r+r1, g+g1, b+b1)
+            return $ \(r,g,b) -> (r, g, b+i)

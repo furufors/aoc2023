@@ -20,17 +20,11 @@ parseline s = let (i, ps) = fromRight (error "parse fail") . parse round "" $ s
             i <- read <$> many1 digit
             _ <- string ": "
             counts <- (colour `sepBy` string ", ") `sepBy` (string "; ")
-            return (i, counts)
-        colour = try red <|> try green <|> try blue
-        red = do
+            pure (i, counts)
+        colour = do
             i <- read <$> many1 digit
-            _ <- string " red"
-            return $ \(r,g,b) -> (r+i, g, b)
-        green = do
-            i <- read <$> many1 digit
-            _ <- string " green"
-            return $ \(r,g,b) -> (r, g+i, b)
-        blue = do
-            i <- read <$> many1 digit
-            _ <- string " blue"
-            return $ \(r,g,b) -> (r, g, b+i)
+            fn <- try red <|> try green <|> try blue
+            pure $ fn i
+        red   = string " red"   >> pure (\i -> \(r,g,b) -> (r+i, g, b))
+        green = string " green" >> pure (\i -> \(r,g,b) -> (r, g+i, b))
+        blue  = string " blue"  >> pure (\i -> \(r,g,b) -> (r, g, b+i))

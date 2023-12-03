@@ -2,14 +2,14 @@
 -- stack --resolver lts-18.18 script
 
 main :: IO ()
-main = interact $ show . sumGears . toAdjacents . lines
+main = interact $ show . sumGears . toAdjacentStars . lines
 
 sumGears :: [(Int, [(Int,Int)])] -> Int
 sumGears [] = 0
 sumGears ((i,ps):rs) = sum [i * x | star <- ps, (x, os) <- rs, ostar <- os, star == ostar] + sumGears rs
 
-toAdjacents :: [[Char]] -> [(Int, [(Int,Int)])]
-toAdjacents css = toA 0 0 []
+toAdjacentStars :: [[Char]] -> [(Int, [(Int,Int)])]
+toAdjacentStars css = toA 0 0 []
     where
         h = length css
         w = length (head css)
@@ -24,4 +24,3 @@ toAdjacents css = toA 0 0 []
                                acc' =  if length ns > 0 then ((read i, ns):acc) else acc
                            in toA (x+l) y acc'
                       else toA (x+1) y acc
-

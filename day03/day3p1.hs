@@ -21,5 +21,4 @@ toAdjacents css = toA 0 0 []
                       else toA (x+1) y acc
 
 symbolAdjacent :: (Int, [Char]) -> Bool
-symbolAdjacent (i, cs) = let remaining = length $ filter (\c -> not $ c `elem` ('.':['0'..'9'])) cs
-                         in remaining > 0
+symbolAdjacent (i, cs) = (>0) . length $ filter (\c -> not $ c `elem` ('.':['0'..'9'])) cs

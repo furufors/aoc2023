@@ -5,7 +5,7 @@ import Text.Parsec
 import Text.Parsec.Char
 
 main :: IO ()
-main = interact $ show . sum . map score .  map parseline . lines
+main = interact $ show . sum . map score . map parseline . lines
 
 score :: (Int, [Int], [Int]) -> Int
 score (i, hand, winners) =

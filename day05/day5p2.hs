@@ -30,16 +30,6 @@ applyMap (f,t) ((d,s,l):as) =
         interior = [(d + max 0 (f - s), min t (l - max 0 (f - s)))]
         after = if s + l < f + t then applyMap (s + l, f + t - s - l) as else []
 
-mapRange' :: (Int, Int) -> [MapItem] -> [(Int, Int)]
-mapRange' x [] = [x]
-mapRange' (rs, rl) (MapItem d s l : ms)
-    | rs <= s + l && s < rs + rl = pre ++ curr ++ post
-    | otherwise = mapRange' (rs, rl) ms
-  where
-    pre = if rs < s then mapRange' (rs, s - rs) ms else []
-    curr = [(d + max 0 (rs - s), min rl (l - max 0 (rs - s)))]
-    post = if s + l < rs + rl then mapRange' (s + l, rs + rl - s - l) ms else []
-
 parseInput :: [[String]] -> ([Int],[[(Int,Int,Int)]])
 parseInput s = (parseSeed . head $ head s, tail . map (map parseline . tail) $ s)
 

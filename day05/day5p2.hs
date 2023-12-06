@@ -10,25 +10,25 @@ main = interact $ show . fst . minimum . mappings . parseInput . map lines . spl
 
 mappings :: ([Int],[[(Int,Int,Int)]]) -> [(Int,Int)]
 mappings (ss, mps) =
-    let pairs = zipWith ((,)) (first ss) (second ss)
+    let pairs = zipWith (\a b -> (a, a + b)) (first ss) (second ss)
         first [] = []
         first (x:xs) = x:second xs
         second [] = []
         second (x:xs) = first xs
-        outer :: [(Int, Int)] -> [(Int,Int,Int)] -> [(Int, Int)]
         outer ps mp = concatMap (\p -> applyMap p mp) ps
     in foldl outer pairs mps
 
 applyMap :: (Int,Int) -> [(Int,Int,Int)] -> [(Int,Int)]
-applyMap i [] = [i]
-applyMap (f,t) ((d,s,l):as) =
-    if f <= s + l && s < f + t
-    then before ++ interior ++ after
-    else applyMap (f,t) as
+applyMap (a,b) [          ] = [(a,b)]
+applyMap (a,b) ((d,s,l):as) =
+    if b < sa || a >= sb
+    then applyMap (a,b) as
+    else before ++ interior ++ after
     where
-        before = if f < s then applyMap (f, s - f) as else []
-        interior = [(d + max 0 (f - s), min t (l - max 0 (f - s)))]
-        after = if s + l < f + t then applyMap (s + l, f + t - s - l) as else []
+        (sa, sb) = (s, s + l)
+        before = if a < sa then applyMap (a, sa - 1) as else []
+        interior = [(d + max 0 (a - sa), d + min l (b - sa))]
+        after = if b >= sb then applyMap (sb, b) as else []
 
 parseInput :: [[String]] -> ([Int],[[(Int,Int,Int)]])
 parseInput s = (parseSeed . head $ head s, tail . map (map parseline . tail) $ s)

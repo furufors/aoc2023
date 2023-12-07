@@ -39,7 +39,7 @@ toCategory c
         isFiveOfAkind  = case jokers of
             5 -> True
             4 -> True
-            x -> any (`elem` grouped) [(5-jokers)..5]
+            x -> any (`elem` grouped) [(5-x)..5]
         isFourOfAKind  = case jokers of
             3 -> True
             x -> any (`elem` grouped) [(4-x)..4]
@@ -52,7 +52,7 @@ toCategory c
             1 -> 3 `elem` grouped || 2 `elem` grouped
             0 -> 3 `elem` grouped
         isTwoPair      = case jokers of
-            0 -> (==2) . length $ filter (==2) grouped -- Not interesting with jokers
+            0 -> (==2) . length $ filter (==2) grouped
             1 -> 2 `elem` grouped && 1 `elem` grouped
         isOnePair      = jokers == 1 || 2 `elem` grouped
 

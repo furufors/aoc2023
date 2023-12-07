@@ -47,7 +47,6 @@ toCategory c
             2 -> 1 `elem` grouped && 2 `elem` grouped || 3 `elem` grouped || 2 `elem` grouped
             1 -> ((==2) . length $ filter (==2) grouped) || 3 `elem` grouped && 1 `elem` grouped
             0 -> 3 `elem` grouped && 2 `elem` grouped
-            otherwise -> error "3 jokers reached a full house condition"
         isThreeOfAkind = case jokers of
             2 -> True
             1 -> 3 `elem` grouped || 2 `elem` grouped

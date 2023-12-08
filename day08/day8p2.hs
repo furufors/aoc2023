@@ -17,28 +17,19 @@ run2 (ds,mp) = let endWithA = filter (\p -> (last p) == 'A') $ M.keys mp
 
 run :: Int -> Label -> ([Char], LRMap) -> Int
 run i pos _ | (last pos) == 'Z' = i
-run i pos ((dir):ds, mp) = run (i+1) (next pos) (ds, mp)
+run i pos (d:ds, mp) | d == 'R' = run (i+1) (snd $ next) (ds, mp)
+                     | d == 'L' = run (i+1) (fst $ next) (ds, mp)
     where
-        next :: Label -> Label
-        next pos = case dir of
-            'R' -> snd next'
-            'L' -> fst next'
-            where
-                next' = case M.lookup pos mp of
-                    Just a -> a
-                    Nothing -> error $ "Missing position " ++ pos
+        next = case M.lookup pos mp of
+            Just a -> a
+            Nothing -> error $ "Missing position " ++ pos
 
 parselines :: [String] -> LRMap
-parselines = M.fromList . map parseline
-
-parseline :: String -> (Label,(Label, Label))
-parseline = fromRight (error "parse fail") . parse round ""
+parselines = M.fromList . map (fromRight (error "parse fail") . parse round "")
     where
         round = do
             pos <- many1 alphaNum
-            string " = ("
-            left <- many1 alphaNum
-            string ", "
-            right <- many1 alphaNum
+            left <- string " = (" >> many1 alphaNum
+            right <- string ", " >> many1 alphaNum
             string ")"
             pure $ (pos,(left,right))

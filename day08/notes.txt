@@ -1,0 +1,3 @@
+XXA just bootstraps the chain into a loop.
+All loops are multiples of the direction's length.
+The loops all synch up at the lcm of their loop lengths.

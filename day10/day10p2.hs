@@ -8,9 +8,7 @@ type Pos = (Int,Int)
 type Connected = M.Map Pos (Pos,Pos)
 
 main :: IO ()
-main = interact $ show . followPipes . toConnectedMap . lines
-
---(\path -> (abs (gaussArea path) - length path + 3) `div` 2)
+main = interact $ show . (\path -> (abs (gaussArea path) - length path + 3) `div` 2) . followPipes . toConnectedMap . lines
 
 gaussArea :: [Pos] -> Int
 gaussArea [(x,y)] = 0
@@ -20,13 +18,14 @@ followPipes :: (Pos, Connected) -> [Pos]
 followPipes (start, mp) =
     let (x,y) = start
         possibleSecond = [(x+dx,y+dy) | dx <- [-1,0,1], dy <- [-1,0,1], (dx,dy) /= (0,0)]
-    in last . sortBy (comparing length) . catMaybes . map (followTo []) $ zip (repeat start) possibleSecond
+    in last . sortBy (comparing length) . catMaybes . map (followTo [start]) $ zip (repeat start) possibleSecond
     where
         followTo :: [Pos] -> (Pos, Pos) -> Maybe [Pos]
-        followTo hist (curr, next) | next == start = Just (curr:hist)
+        followTo hist (curr, next) | next == start = Just hist
         followTo hist (curr, next) = case M.lookup next mp of
-            Just (a,b) -> if a == curr then followTo (b:hist) (next, b) else followTo (a:hist) (next, a)
-            Nothing -> Nothing
+            Just (a,b) | a == curr -> followTo (next:hist) (next, b)
+            Just (a,b) | b == curr -> followTo (next:hist) (next, a)
+            otherwise -> Nothing
 
 toConnectedMap :: [[Char]] -> (Pos, Connected)
 toConnectedMap css =

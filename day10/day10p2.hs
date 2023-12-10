@@ -11,8 +11,7 @@ main :: IO ()
 main = interact $ show . (\p -> (gaussArea p - length p + 2) `div` 2) . followPipes . toConnectedMap . lines
 
 gaussArea :: [Pos] -> Int
-gaussArea [(x,y)] = 0
-gaussArea ((x1,y1):(x2,y2):ps) = (y1 + y2) * (x2 - x1) + gaussArea ((x2,y2):ps)
+gaussArea ps =  abs . sum $ zipWith (\(x1, y1) (x2, y2) -> (y1 + y2) * (x2 - x1)) ps (tail ps)
 
 followPipes :: (Pos, Connected) -> [Pos]
 followPipes (start, mp) =

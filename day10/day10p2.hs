@@ -8,7 +8,7 @@ type Pos = (Int,Int)
 type Connected = M.Map Pos (Pos,Pos)
 
 main :: IO ()
-main = interact $ show . (\path -> (abs (gaussArea path) - length path + 3) `div` 2) . followPipes . toConnectedMap . lines
+main = interact $ show . (\p -> (gaussArea p - length p + 2) `div` 2) . followPipes . toConnectedMap . lines
 
 gaussArea :: [Pos] -> Int
 gaussArea [(x,y)] = 0

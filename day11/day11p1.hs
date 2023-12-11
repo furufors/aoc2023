@@ -6,7 +6,6 @@ type Pos = (Int,Int)
 main :: IO ()
 main = interact $ show . sum . manhattans . toCoords . expand . lines
 
-
 manhattans :: [Pos] -> [Int]
 manhattans [] = []
 manhattans (a:as) = [ manhattan a b | b <- as ] ++ manhattans as

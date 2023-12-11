@@ -4,22 +4,19 @@ import Data.List
 type Pos = (Int,Int)
 
 main :: IO ()
-main = interact $ show . sum . (\i -> manhattans i $ toCoords i) . lines
+main = interact $ show . (\i -> manhattans (weights i) $ toCoords i) . lines
 
-manhattans :: [String] -> [Pos] -> [Int]
-manhattans ss [    ] = []
-manhattans ss (a:as) = [ manhattan a b | b <- as ] ++ manhattans ss as
+manhattans :: ([Int], [Int]) -> [Pos] -> Int
+manhattans _ [    ] = 0
+manhattans (xw, yw) (a:as) = sum [ manhattan a b | b <- as ] + manhattans (xw, yw) as
     where
         manhattan :: Pos -> Pos -> Int
-        manhattan (a,b) (c,d) =
-            abs (a-c) + abs (b-d) + emptyBetween b d ss + emptyBetween a c (transpose ss)
+        manhattan (a,b) (c,d) = vert + horiz
+            where horiz = sum $ take (max a c - min a c) (drop (min a c) xw)
+                  vert  = sum $ take (max b d - min b d) (drop (min b d) yw)
 
-emptyBetween :: Int -> Int -> [String] -> Int
-emptyBetween a b ss =
-    let u = max a b
-        l = min a b
-        d = u - l
-    in (*(999999)) . length . filter (all (== '.')) . take (d-1) . drop (l+1) $ ss
+weights :: [String] -> ([Int], [Int])
+weights ls = let f l = if all (=='.') l then 1000000 else 1 in (map f $ transpose ls, map f ls)
 
 toCoords :: [String] -> [Pos]
 toCoords ss =

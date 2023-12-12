@@ -13,9 +13,8 @@ main = interact $ show . sum . map (countCombs . parseline) . lines
 countCombs :: ([Rec], [Int]) -> Int
 countCombs (rs,is) = combs rs is
     where
-        lrs = length rs
-        lis = length is
-        isValid = M.fromList [((r,i), combs (drop r rs) (drop i is)) | r <- [0..lrs], i <- [0.. lis]]
+        (lrs, lis) = (length rs, length is)
+        combsMap = M.fromList [((lrs - r, lis - i), combs (drop r rs) (drop i is)) | r <- [0..lrs], i <- [0.. lis]]
 
         combs :: [Rec] -> [Int] -> Int
         combs [] [] = 1
@@ -29,8 +28,8 @@ countCombs (rs,is) = combs rs is
             then combs (drop (i) rs) is
             else 0
         combs (Ukwn:rs) is =
-            let key = (lrs - length rs, lis - length is)
-            in case M.lookup key isValid of
+            let key = (length rs, length is)
+            in case M.lookup key combsMap of
                 Just n -> n + combs (Dmg:rs) is
                 Nothing -> error $ "Missing lookup for " ++ show key
 
@@ -41,8 +40,7 @@ parseline = fromRight (error "parse fail") . parse round ""
             rs <- many1 parseRec
             spaces
             is <- (read <$> many1 digit) `sepBy` string ","
-            let dmgGroups = intercalate [Ukwn] . take 5 $ repeat rs
-            return (dmgGroups, concat . take 5 $ repeat is)
+            return (intercalate [Ukwn] . take 5 $ repeat rs, concat . take 5 $ repeat is)
         parseRec = try op <|> try dmg <|> try ukwn
         op   = string "." >> return Op
         dmg  = string "#" >> return Dmg

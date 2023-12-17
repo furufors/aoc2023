@@ -1,10 +1,9 @@
 #!/usr/bin/env stack
 -- stack --resolver lts-18.18 script
-import Data.Char
 import Algorithm.Search
 import Data.Maybe
 data Dir = N | U | D | L | R deriving (Eq, Ord, Show)
-type State = (Int,Int,Dir,Int) -- x,y,horiz,vert
+type State = (Int,Int,Dir,Int) -- x,y,dir,count
 
 main :: IO ()
 main = interact $ show . fromJust . solve . map (map $ (\x -> read [x])) . lines

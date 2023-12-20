@@ -15,37 +15,49 @@ type Rule = (RuleType, String, [String])
 main :: IO ()
 main = interact $ show . run . buildMaps . map parseRules . lines
 
+-- vd ns bh dl all high triggers zf -> rx
+-- vd: 9802070 - 9798189 = 3881
+-- bh: 9800668 - 9796907 = 3761
+-- ns: 9800350 - 9796583 = 3767
+-- dl: 9799714 - 9795935 = 3779
+-- foldl1 lcm [3881,3761,3767,3779]
+-- 207787533680413
+
 run :: (Mappings,ConjunctionState) -> Int
 run (mp,cs1) =
-    let (rl,rh) = run1 1000 (0,0) M.empty cs1 [("broadcaster", False, "button")]
+    let (rl,rh) = run1 10000000 (0,0) M.empty cs1 [("broadcaster", False, "button")]
     in rl * rh
     where
         run1 :: Int -> (Int,Int) -> FlipFlopState -> ConjunctionState -> [(String,Bool,String)] -> (Int,Int)
         run1 0 (l,h) _ _ _ = (l,h)
         run1 i (l,h) fs cs [] = run1 (i-1) (l,h) fs cs [("broadcaster", False, "button")]
         run1 i (l,h) fs cs ((str,sig,from):as) =
-            case M.lookup str mp of
-                Just (t,targets) -> case t of
-                    BroadCaster -> if sig
-                                   then run1 i (l,h+1) fs cs (as ++ [(tr,False,str) | tr <- targets])
-                                   else run1 i (l+1,h) fs cs (as ++ [(tr,False,str) | tr <- targets])
-                    FlipFlop -> if sig
-                                then run1 i (l,h+1) fs cs as
-                                else let state = getFlipFlop str fs
-                                         fs' = M.insert str (not state) fs
-                                         score = (l+1,h)
-                                     in if state
-                                        then run1 i score fs' cs (as ++ [(tr,False,str) | tr <- targets])
-                                        else run1 i score fs' cs (as ++ [(tr,True,str) | tr <- targets])
+            if sig && from `elem` ["vd", "ns", "bh", "dl"]
+            then trace (from ++ ": " ++ show i) f
+            else f
+            where
+                f = case M.lookup str mp of
+                    Just (t,targets) -> case t of
+                        BroadCaster -> if sig
+                                       then run1 i (l,h+1) fs cs (as ++ [(tr,False,str) | tr <- targets])
+                                       else run1 i (l+1,h) fs cs (as ++ [(tr,False,str) | tr <- targets])
+                        FlipFlop -> if sig
+                                    then run1 i (l,h+1) fs cs as
+                                    else let state = getFlipFlop str fs
+                                             fs' = M.insert str (not state) fs
+                                             score = (l+1,h)
+                                         in if state
+                                            then run1 i score fs' cs (as ++ [(tr,False,str) | tr <- targets])
+                                            else run1 i score fs' cs (as ++ [(tr,True,str) | tr <- targets])
 
-                    Conjunction -> let cs' = setConjunction str from sig cs
-                                       score = if sig then (l,h+1) else (l+1,h)
-                                   in if all id (getConjunction str cs')
-                                      then run1 i score fs cs' (as ++ [(tr,False,str) | tr <- targets])
-                                      else run1 i score fs cs' (as ++ [(tr,True,str) | tr <- targets])
-                Nothing -> if sig
-                           then run1 i (l,h+1) fs cs as
-                           else run1 i (l+1,h) fs cs as
+                        Conjunction -> let cs' = setConjunction str from sig cs
+                                           score = if sig then (l,h+1) else (l+1,h)
+                                       in if all id (getConjunction str cs')
+                                          then run1 i score fs cs' (as ++ [(tr,False,str) | tr <- targets])
+                                          else run1 i score fs cs' (as ++ [(tr,True,str) | tr <- targets])
+                    Nothing -> if sig
+                               then run1 i (l,h+1) fs cs as
+                               else run1 i (l+1,h) fs cs as
 
 getConjunction :: String -> ConjunctionState -> [Bool]
 getConjunction s cs = case M.lookup s cs of

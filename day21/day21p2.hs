@@ -2,6 +2,7 @@
 -- stack --resolver lts-18.18 script
 import qualified Data.Set as S
 import qualified Data.Map as M
+import Data.List
 import Debug.Trace
 type Point = (Int,Int)
 type Stones = S.Set Point
@@ -13,20 +14,21 @@ main = interact $ show . walk 1000 . parse . lines
 walk :: Int -> (Points, Int, Int, Stones) -> Int
 walk 0 (ps, _, _, _) = sum (map length (M.elems ps))
 walk n (ps,mx,my,ss) = trace (show (1000 - n) ++ ": " ++ (show . sum . map length $ (M.elems ps))) $
-    let next = M.fromList [ (p, univ') | ((x,y),univ) <- M.assocs ps, (dx,dy) <- [(1,0),(0,1),(-1,0),(0,-1)]
-                             , let y' = warp (y + dy) my, let x' = warp (x + dx) mx, let p = (x',y')
-                             , let univ' = universe univ (x + dx) mx (y + dy) my
-                             , not (p `S.member` ss) ]
+    let next = M.fromListWith (\a b -> nub (a++b))
+                [ (p, univ') | ((x,y),univ) <- M.assocs ps, (dx,dy) <- [(1,0),(0,1),(-1,0),(0,-1)]
+                , let y' = warp (y + dy) (my+1), let x' = warp (x + dx) (mx+1), let p = (x',y')
+                , let univ' = universe univ (x + dx) mx (y + dy) my
+                , not (p `S.member` ss) ]
     in walk (n-1) (next,mx,my,ss)
 
 warp :: Int -> Int -> Int
-warp x mx = let p = x `mod` mx in if x<0 then mx - x else x
+warp x mx = let p = x `mod` mx in if p<0 then mx + p + 1 else p
 
 universe :: [Point] -> Int -> Int -> Int -> Int -> [Point]
 universe us x mx y my =
     let dx = if x > mx then 1 else if x < 0 then -1 else 0
         dy = if y > my then 1 else if y < 0 then -1 else 0
-    in map (\(x,y) -> (x + dx, y + dy)) us
+    in nub . sort $ map (\(px,py) -> (px + dx, py + dy)) us
 
 parse :: [[Char]] -> (Points, Int, Int, Stones)
 parse css = let maxY = length css - 1

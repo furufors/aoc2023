@@ -3,7 +3,6 @@
 import qualified Data.Map as M
 import qualified Data.Set as S
 import Data.List
-import Debug.Trace
 import Algorithm.Search
 type Point = (Int,Int)
 data PointType = Empty | RSlope | USlope | DSlope | LSlope | Blocked deriving (Show, Eq)
@@ -28,13 +27,12 @@ run1 wd = let typeAt :: Point -> PointType
                         , okMove (dx,dy) (typeAt p)]
               exitY = snd . maximumBy (\a b -> compare (snd a) (snd b)) $ M.keys wd
               exit = fst . head . filter (\(k,v) -> exitY == snd k && v == Empty) $ M.assocs wd
-              --keepLonger ps = map (maximumBy (\a b -> compare (S.size $ snd a) (S.size $ snd b))) $ groupBy (\a b -> fst a == fst b) ps
               loop i ns ps =  if null ps
                               then ns
                               else if any (\(p,s) -> p == exit) ps
                                    then loop (i+1) (i:ns) (step ps)
                                    else loop (i+1) ns (step ps)
-          in trace (show start ++ " to " ++ show exit) $ loop 0 [] start
+          in loop 0 [] start
 
 okMove :: Point -> PointType -> Bool
 okMove _ Empty = True

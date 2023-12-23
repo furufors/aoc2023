@@ -13,7 +13,7 @@ main = interact $ show . run . lines
 
 run :: [String] -> Int
 run ss = let points :: [Point]
-             points = [(i,j) | (j,r) <- zip [0..] (ss), (i,c) <- zip [0..] r, c /= '#']
+             points = [(x,y) | (y,r) <- zip [0..] (ss), (x,c) <- zip [0..] r, c /= '#']
              nbrs :: DirectNbrs
              nbrs = M.fromList [((x,y), [ p1 | (dx,dy) <- [(1,0),(-1,0),(0,1),(0,-1)], let p1 = (x+dx,y+dy), p1 `elem` points]) | (x,y) <- points]
              verts :: Nbrs

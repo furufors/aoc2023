@@ -3,45 +3,28 @@
 import qualified Data.Map as M
 import qualified Data.Set as S
 import Data.List
-import Debug.Trace
-import Algorithm.Search
+import Data.Maybe
 type Point = (Int,Int)
-type PointType = Bool
-type World = M.Map Point PointType
-type Visited = S.Set Point
-type State = (Point, Visited)
+type DirectNbrs = M.Map Point [Point]
+type Nbrs = M.Map Point [(Point, Int)]
 
 main :: IO ()
-main = interact $ show . run1 . parse . lines
+main = interact $ show . run . lines
 
-run1 :: World -> Int
-run1 wd = let typeAt :: Point -> PointType
-              typeAt p = case M.lookup p wd of
-                Just  t -> t
-                Nothing -> False
-              start = let p = fst . head . filter (\(k,v) -> 0 == snd k && v) $ M.assocs wd in (p, S.fromList [p])
-              exitY = snd . maximumBy (\a b -> compare (snd a) (snd b)) $ M.keys wd
-              exit = fst . head . filter (\(k,v) -> exitY == snd k && v) $ M.assocs wd
-              step ps = [ (p, S.insert p vs)
-                        | ((x,y),vs) <- ps
-                        , (dx,dy) <- [(0,1),(1,0),(0,-1),(-1,0)]
-                        , let p = (x+dx,y+dy)
-                        , not (S.member p vs)
-                        , typeAt p]
-              dive i p | fst p == exit = i
-              dive i p = let next = step [p]
-                         in if null next
-                            then 0
-                            else maximum $ map (dive (i+1)) next
-          in trace (show start ++ " to " ++ show exit) $ dive 0 start
-
-parse :: [String] -> World
-parse ss = M.fromList $ concatMap (\(y,s) -> zipWith (\x l -> ((x,y), toPoint l)) [0..] s) $ zip [0..] ss
-
-toPoint :: Char -> PointType
-toPoint '.' = True
-toPoint '>' = True
-toPoint '^' = True
-toPoint 'v' = True
-toPoint '<' = True
-toPoint '#' = False
+run :: [String] -> Int
+run ss =
+    let points :: [(Int,Int)]
+        points = [(i,j) | (j,r) <- zip [0..] (ss), (i,c) <- zip [0..] r, c /= '#']
+        nbrs :: DirectNbrs
+        nbrs = M.fromList [((x,y), [ p1 | (dx,dy) <- [(1,0),(-1,0),(0,1),(0,-1)], let p1 = (x+dx,y+dy), p1 `elem` points]) | (x,y) <- points]
+        verts :: Nbrs
+        verts = M.fromList [(p, [ warp p n 1 | n <- fromJust (M.lookup p nbrs) ]) | p <- points]
+        warp :: Point -> Point -> Int -> (Point, Int)
+        warp p n d = let ns = fromJust $ M.lookup n nbrs
+                   in if (length ns == 2)
+                      then warp n (head $ filter (/= p) ns) (d + 1)
+                      else (n,d)
+        loop n d b goal vis | n == goal = d
+        loop n d b goal vis | S.member n vis = b
+        loop n d b goal vis = maximum $ map (\(en,ed) -> loop en (d + ed) b goal (S.insert n vis)) (fromJust $ M.lookup n verts)
+    in loop (head points) 0 0 (last points) S.empty

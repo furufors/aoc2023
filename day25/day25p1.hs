@@ -20,16 +20,14 @@ toVerts vs (f,t) = let fv = fromMaybe S.empty $ M.lookup f vs
 findMaxFlow :: Verts -> Int
 findMaxFlow vs =
     let findPath a b = snd . fromJust $ dijkstra (\p -> fromJust $ M.lookup p vs) (const $ const 1) (==b) a
-        paths = [ zip (a:es) (es++[b]) | (a,b) <- take 5000 $ [(a,b) | a <- M.keys vs, b <- M.keys vs, a /= b]
-                , let es = findPath a b]
+        paths = [ zip (a:es) (es++[b]) | (a,b) <- take 5000 $ [(a,b) | (a:as) <- tails (M.keys vs), b <- as]
+                , let es = findPath a b ]
         occur = foldl addVertVis M.empty $ concat paths
         sorting a b = compare (snd a) (snd b)
         priority = take 10 $ map fst . reverse . sortBy sorting $ M.assocs occur
-        hit = head [ [a,b,c] | a <- priority, b <- priority, c <- priority
-                   , a /= b && b /= c && c /= a
+        hit = head [ [a,b,c] | (a:as) <- tails priority, (b:bs) <- tails as, c <- bs
                    , let vs' = foldl remove vs [a,b,c]
-                   , any null . take 20 $ [findPath' vs' f t | f <- M.keys vs', t <- M.keys vs', f /= t]
-                   ]
+                   , any null . take 20 $ [findPath' vs' f t | f <- M.keys vs', t <- M.keys vs', f /= t] ]
         findPath' verts from to = bfs (\f -> fromJust $ M.lookup f verts) (==to) from
         correctSplit = foldl remove vs hit
         sizeA = S.size $ extent correctSplit (S.empty) (head $ M.keys correctSplit)

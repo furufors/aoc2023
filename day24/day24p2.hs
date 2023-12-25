@@ -1,33 +1,27 @@
 #!/usr/bin/env stack
 -- stack --resolver lts-18.18 script
 import Data.List.Split
-import Data.Set
-type Visited = S.Set Int
-type Hail = ((Int,Int,Int),(Int,Int,Int))
+import Math.LinearEqSolver
+type Hail = ((Integer,Integer,Integer),(Integer,Integer,Integer))
 
 main :: IO ()
-main = interact $ show . run . map parse . zip [0..] . lines
+main = do
+    hails <- map parse . lines <$> getContents
+    results <- run hails
+    putStrLn $ results
 
-run :: [(Int,Hail)] -> Int
-run hs = let remaining = S.fromList $ map fst hs
-             startPos = map (fst . snd) hs
-         in loop candidates remaining it1 it2
+run :: [Hail] -> IO (Maybe [Integer])
+run hs = let ((x1,y1,z1),(vx1,vy1,vz1)) = head hs
+             ((x2,y2,z2),(vx2,vy2,vz2)) = head .tail $ hs
+             ((x3,y3,z3),(vx3,vy3,vz3)) = head . tail . tail $ hs
+             coeffs = [
+                      ,
+                      ]
+             vector = []
+         in solveIntegerLinearEqs
 
-timeStepAll :: [(Int,Hail)] -> [(Int,Hail)]
-timeStepAll = map (\(i,h) -> (i, timeStep h))
-
-timeStep :: Hail -> Hail
-timeStep ((x,y,z),(vx,vy,vz)) = ((x + vx,y + vy,z + vz),(vx,vy,vz))
-
-x, y, vx, vy, slope :: Hail -> Double
-x ((px,_,_),(_,_,_)) = fromIntegral px
-y ((_,py,_),(_,_,_)) = fromIntegral py
-vx ((_,_,_),(pvx,_,_)) = fromIntegral pvx
-vy ((_,_,_),(_,pvy,_)) = fromIntegral pvy
-slope ((_,_,_),(vx,vy,_)) = (fromIntegral vy )/ (fromIntegral vx)
-
-parse :: String -> (Int, Hail)
-parse (i,s) = let (a,b) = span (/='@') s
-                  as = map read $ splitOn ", " a
-                  bs = map read $ splitOn ", " $ tail b
-              in (i,((as!!0, as!!1, as!!2), (bs!!0, bs!!1, bs!!2)))
+parse :: String -> Hail
+parse s = let (a,b) = span (/='@') s
+              as = map read $ splitOn ", " a
+              bs = map read $ splitOn ", " $ tail b
+          in ((as!!0, as!!1, as!!2), (bs!!0, bs!!1, bs!!2))

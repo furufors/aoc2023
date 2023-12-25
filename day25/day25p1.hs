@@ -24,50 +24,44 @@ toVerts vs ((f,t):es) = let vs' = case M.lookup f vs of
 findMaxFlow :: Verts -> Int
 findMaxFlow vs =
     let ns = M.keys vs
+        findPath a b = snd . fromJust $ dijkstra (\p -> fromJust $ M.lookup p vs) (const $ const 1) (==b) a
         paths = [ zip (a:es) (es++[b]) | (a,b) <- take 5000 $ [(a,b) | a <- ns, b <- ns,  a /= b]
              , let es = findPath a b]
-        findPath a b = snd . fromJust $ dijkstra next cost solved start
-            where
-                next p = fromJust $ M.lookup p vs
-                cost _ _ = 1
-                solved p = p == b
-                start = a
-        occur :: Flow
         occur = foldl addVertVis M.empty $ concat paths
-        addVertVis :: Flow -> (String, String) -> Flow
-        addVertVis f (a,b) = let k = (min a b, max a b)
-                          in case M.lookup k f of
-                                Just i  -> M.insert k (i + 1) f
-                                Nothing -> M.insert k (1) f
         sorting a b = compare (snd a) (snd b)
         priority = take 10 $ map fst . reverse . sortBy sorting $ M.assocs occur
-        (a,b,c) = head [(a,b,c)
-                       | a <- priority
-                       , b <- priority
-                       , c <- priority
+        (a,b,c) = head [(a,b,c) | a <- priority, b <- priority, c <- priority
                        , a /= b && b /= c && c /= a
                        , let vs' = remove a $ remove b $ remove c $ vs
                        , any null . take 20 $ [findPath' vs' f t | f <- M.keys vs', t <- M.keys vs', f /= t]
                        ]
         findPath' verts from to = bfs (\f -> fromJust $ M.lookup f verts) (==to) from
-        remove :: (String,String) -> Verts -> Verts
-        remove (a,b) verts = let verts' = case M.lookup a verts of
-                                            Just r -> M.insert a (S.delete b r) verts
-                                            Nothing -> verts
-                             in case M.lookup b verts' of
-                                    Just r -> M.insert b (S.delete a r) verts'
-                                    Nothing -> verts'
         correctSplit = remove a $ remove b $ remove c $ vs
         startPoint = head $ M.keys correctSplit
         sizeA = S.size $ extent correctSplit (S.empty) startPoint
-        extent :: Verts -> (S.Set String) -> String -> (S.Set String)
-        extent vs vis s = if S.member s vis
-                          then vis
-                          else case M.lookup s vs of
-                                Just ns -> foldl (extent vs) (S.insert s vis) ns
-                                Nothing -> vis
         totalSize = length $ M.keys correctSplit
     in sizeA * (totalSize - sizeA)
+
+addVertVis :: Flow -> (String, String) -> Flow
+addVertVis f (a,b) = let k = (min a b, max a b)
+                  in case M.lookup k f of
+                        Just i  -> M.insert k (i + 1) f
+                        Nothing -> M.insert k (1) f
+
+remove :: (String,String) -> Verts -> Verts
+remove (a,b) verts = let verts' = case M.lookup a verts of
+                                    Just r -> M.insert a (S.delete b r) verts
+                                    Nothing -> verts
+                     in case M.lookup b verts' of
+                            Just r -> M.insert b (S.delete a r) verts'
+                            Nothing -> verts'
+
+extent :: Verts -> (S.Set String) -> String -> (S.Set String)
+extent vs vis s = if S.member s vis
+                  then vis
+                  else case M.lookup s vs of
+                        Just ns -> foldl (extent vs) (S.insert s vis) ns
+                        Nothing -> vis
 
 parse :: String -> [(String, String)]
 parse s = let (a,b) = span (/=':') s
